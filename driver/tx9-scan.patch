@@ -1,0 +1,58 @@
+--- a/os/linux/cfg80211/wf_cfg80211.c
++++ b/os/linux/cfg80211/wf_cfg80211.c
+@@ -1975,7 +1975,8 @@
+     wf_u8 scan_time_for_one_ch = 6;
+     wf_u8 scan_time = 1;
+     wf_u8 social_channel = 0;
+-    wf_u8 req_ch_nums    = req->n_channels;
++    wf_u8 req_ch_nums;
++    scan_type_e scan_type;
+ 
+     CFG80211_DBG("scan start!");
+ 
+@@ -1984,6 +1985,9 @@
+         ret = -EINVAL;
+         return ret;
+     }
++
++    req_ch_nums = req->n_channels;
++    scan_type = req->n_ssids ? SCAN_TYPE_ACTIVE : SCAN_TYPE_PASSIVE;
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0))
+     if (ndev == NULL)
+@@ -2031,7 +2035,8 @@
+         goto exit;
+     }
+ 
+-    if ( (wf_memcmp(req->ssids->ssid, "DIRECT-", 7) == 0)
++    if (req->n_ssids && req->ssids && req->ssids[0].ssid_len >= 7
++        && wf_memcmp(req->ssids[0].ssid, "DIRECT-", 7) == 0
+         && wf_p2p_get_ie((wf_u8 *) req->ie, req->ie_len, NULL, NULL))
+     {
+ 
+@@ -2163,7 +2168,7 @@
+         {
+             wf_memcpy(&current_ch[i], &current_ch[0], sizeof(current_ch[0]));
+         }
+-        ret = wf_mlme_scan_start(pnic_info, SCAN_TYPE_ACTIVE,
++        ret = wf_mlme_scan_start(pnic_info, scan_type,
+                                  ssids, ssid_num,
+                                  current_ch, scan_time_for_one_ch,
+                                  WF_MLME_FRAMEWORK_NETLINK);
+@@ -2179,14 +2184,14 @@
+                           sizeof(current_ch[0]));
+             }
+         }
+-        ret = wf_mlme_scan_start(pnic_info, SCAN_TYPE_ACTIVE,
++        ret = wf_mlme_scan_start(pnic_info, scan_type,
+                                  ssids, ssid_num,
+                                  current_ch, scan_time * req->n_channels,
+                                  WF_MLME_FRAMEWORK_NETLINK);
+     }
+     else
+     {
+-        ret = wf_mlme_scan_start(pnic_info, SCAN_TYPE_ACTIVE,
++        ret = wf_mlme_scan_start(pnic_info, scan_type,
+                                  ssids, ssid_num,
+                                  current_ch, req->n_channels,
+                                  WF_MLME_FRAMEWORK_NETLINK);

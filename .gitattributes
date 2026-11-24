@@ -1,0 +1,5 @@
+*.patch -text
+driver/wf_cfg80211.c -text
+*.dtb binary
+*.sh text eol=lf
+Makefile text eol=lf
